@@ -1,21 +1,31 @@
-name: Build .NET
+name: Build QuickXecute
 
-on: [push]
+on:
+  push:
+  pull_request:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout repository
+      uses: actions/checkout@v4
 
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
+    - name: Add MSBuild to PATH
+      uses: microsoft/setup-msbuild@v2
+
+    - name: Restore NuGet packages
+      run: nuget restore QuickXecute.sln
+
+    - name: Build solution (Release)
+      run: msbuild QuickXecute.sln /p:Configuration=Release /m
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
       with:
-        dotnet-version: '8.0.x'
-
-    - name: Restore
-      run: dotnet restore QuickXecute.sln
-
-    - name: Build
-      run: dotnet build QuickXecute.sln --configuration Release
+        name: QuickXecute-build
+        path: |
+          **/Release/**
+          **/x64/Release/**
+          **/Release/*.exe
